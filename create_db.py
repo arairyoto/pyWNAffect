@@ -16,29 +16,6 @@ import difflib
 
 import sqlite3
 
-# connect to sqlite database
-dbname = 'wn_affect.db'
-conn = sqlite3.connect(dbname)
-c = conn.cursor()
-
-# activate sql with execute method
-# create table
-create_table = '''create table asynsets (SYNSET, CATEGORY)'''
-c.execute(create_table)
-create_table = '''create table hierarchies (HYPE, HYPO)'''
-c.execute(create_table)
-
-# store the data to the sqlite database
-sql = '''insert into examples (CUE, TARGET, NORMED, G, P, FSG, BSG, MSG, OSG, M,
-         MMIAS, O, OMIAS, QSS, QFR, QCON, QH, QPS, QMC, QPR, QRSG, QUC, TSS, TFR,
-         TCON, TH, TPS, TMC, TPR, TRSG, TUC) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
-c.executemany(sql, d)
-
-conn.commit()
-# disconnect to the sqlite database
-conn.close()
-
-
 #wordnet-1.6 の読み込み
 cwd = os.getcwd()
 nltk.data.path.append(cwd)
@@ -129,35 +106,6 @@ def _wn30_synsets_from_wn16_synset(synset):
 
     return synsets[index]
 
-    # for i in range(len(synsets)):
-    #     try:
-    #         synset_sims[i] = synset.wup_similarity(synsets[i])
-    #     except (RuntimeError, TypeError, NameError):
-    #         # Set similarity to 0 in case of RuntimeError
-    #         synset_sims[i] = 0
-    # # Most similar synset index
-    # index = sorted(synset_sims.items(), key=lambda x:x[1], reverse=True)[0][0]
-    #
-    # return synsets[index]
-
-def asynsets_to_dictionary(asynsets):
-    dictionary = {}
-    for pos in ["noun", "adj", "verb", "adv"]:
-        for offset in asynsets[pos].keys():
-            if asynsets[pos][offset]["missing"]==1:
-                continue
-            else:
-                print(asynsets[pos][offset]["word"])
-                dictionary[asynsets[pos][offset]["word"]]=asynsets[pos][offset]["categ"]
-
-                #似ているsynsetに拡張
-                synsets = wn.synset(asynsets[pos][offset]["synset"]).similar_tos()
-                for synset in synsets:
-                    for l in synset.lemmas():
-                        dictionary[l.name()] = asynsets[pos][offset]["categ"]
-
-    return dictionary
-
 # def asynsets_to_syn_dictionary(asynsets):
 #     dictionary = {}
 #     for pos in ["noun", "adj", "verb", "adv"]:
@@ -183,7 +131,6 @@ def asynsets_to_syn_dictionary(asynsets):
             if asynsets[pos][offset]["missing"]==1:
                 continue
             else:
-                print(asynsets[pos][offset]["synset"])
                 dictionary.append((asynsets[pos][offset]["synset"],asynsets[pos][offset]["categ"]))
 
                 #似ているsynsetに拡張
@@ -192,110 +139,26 @@ def asynsets_to_syn_dictionary(asynsets):
                 #     dictionary[synset.name()] = asynsets[pos][offset]["categ"]
 
     return dictionary
-#new version
-# def asynsets_to_dictionary(asynsets):
-#     dictionary = {}
-#     for pos in ["noun", "adj", "verb", "adv"]:
-#         for offset in asynsets[pos].keys():
-#             dictionary[asynsets[pos][offset]["synset"]]=asynsets[pos][offset]["categ"]
-#
-#             #似ているsynsetに拡張
-#             synsets = wn.synset(asynsets[pos][offset]["synset"]).similar_tos()
-#             for synset in synsets:
-#                 dictionary[synset.name()]=asynsets[pos][offset]["categ"]
-#
-#     return dictionary
-
-# # Merge asynsets with Japanese WordNet
-# def merge_asynset_with_wnjpn(asynsets):
-#     for pos in asynsets.keys():
-#         for offset in asynsets[pos].keys():
-#             if not "db-synset" in asynsets[pos][offset]: continue
-#             db_synsets = _retrieve_similar_synset(WN.synset(asynsets[pos][offset]["synset"]))
-#             asynsets[pos][offset]["jpnwords"] = _get_jpnword_from_synsets(db_synsets)
-#
-#     return asynsets
-#
-# # Retrieve similar synsets from WordNet
-# def _retrieve_similar_synset(synset):
-#     if not synset: return []
-#     similar_db_synsets = [str("%08d-%s" % (synset.offset, synset.pos))]
-#     searched_words = {}
-#
-#     synsets = [synset]
-#     while synsets:
-#         for synset in synsets:
-#             searched_words[synset.name] = 1
-#
-#         nexts = []
-#         for synset in synsets:
-#             for syn in _get_similar_synsets(synset):
-#                 if not syn.name in searched_words:
-#                     similar_db_synsets.append(str("%08d-%s" % (syn.offset, syn.pos)))
-#                     nexts.append(syn)
-#         synsets = nexts
-#
-#     return similar_db_synsets
-#
-# # Get hyponyms, similar, verb groups, entailment, pertainym
-# def _get_similar_synsets(synset):
-#     synsets = []
-#     synsets.append(synset.hyponyms())
-#     synsets.append(synset.similar_tos())
-#     synsets.append(synset.verb_groups())
-#     synsets.append(synset.entailments())
-#     for lemma in synset.lemmas:
-#         synsets.append(map(lambda x: x.synset, lemma.pertainyms()))
-#
-#     return list(set(reduce(lambda x,y: x+y, synsets)))
-#
-#
-# # Get japanese word from japanese wordnet
-# def _get_jpnword_from_synsets(synsets):
-#     metadata = MetaData(DB, reflect=True)
-#
-#     jpnwords = []
-#     sense = Table('sense', metadata)
-#     sense_rows = DB.execute(sense.select(and_(
-#         sense.c.lang == 'jpn',
-#         sense.c.synset.in_(synsets)
-#     ))).fetchall()
-#     if len(sense_rows) == 0: return []
-#
-#     word = Table('word', metadata)
-#     word_rows = DB.execute(word.select(and_(
-#         word.c.wordid.in_([ row.wordid for row in sense_rows ])
-#     ))).fetchall()
-#
-#     return word_rows
-#
-# # Output japanese wordnet affect
-# def output_jpn_asynset(asynsets):
-#     root = Element('syn-list')
-#     for pos in asynsets.keys():
-#         pos_node = SubElement(root, "%s-syn-list" % (pos))
-#         for offset, asynset in asynsets[pos].items():
-#             node = SubElement(pos_node, "%s-syn" % (pos))
-#             for attr in ["offset", "synset", "categ", "caus-stat", "noun-synset", "jpnword", "jpnwordid"]:
-#                 if attr in asynset:
-#                     node.set(attr, asynset[attr])
-#             if "jpnwords" in asynset:
-#                 for word in asynset["jpnwords"]:
-#                     word_node = SubElement(node, "jpn-word", {
-#                         "wordid": str(word.wordid),
-#                         "lemma": word.lemma,
-#                         "pos": word.pos,
-#                     })
-#
-#     file = open("jpn-asynset.xml", "w")
-#     file.write(minidom.parseString(tostring(root)).toprettyxml(encoding='utf-8'))
-#     file.close()
 
 if __name__ == '__main__':
+    # connect to sqlite database
+    dbname = 'wn_affect.db'
+    conn = sqlite3.connect(dbname)
+    c = conn.cursor()
+
+    # activate sql with execute method
+    # create table
+    create_table = '''create table asynsets (SYNSET, CATEGORY)'''
+    c.execute(create_table)
+
     #wn_affectを{word:categ}の辞書化し，それをpickleファイル化
     asynsets_16 = load_asynsets("/Users/arai9814/WordNet/wn-domains-3.2/wn-affect-1.1/a-synsets.xml")
     asynsets = merge_asynset_with_wn(asynsets_16)
     dic = asynsets_to_syn_dictionary(asynsets)
 
-    with open('syn2categ.pickle', 'wb') as f:
-        pickle.dump(dic, f)
+    sql = '''insert into asynsets (SYNSET, CATEGORY) values (?,?)'''
+    c.executemany(sql, dic)
+
+    conn.commit()
+    # disconnect to the sqlite database
+    conn.close()
