@@ -19,7 +19,7 @@ import sqlite3
 #wordnet-1.6 の読み込み
 cwd = os.getcwd()
 nltk.data.path.append(cwd)
-wordnet16_dir="/Users/arai9814/WordNet/wordnet-1.6/"
+wordnet16_dir="../WordNet/Wordnet-1.6/"
 wn16_path = "{0}/dict".format(wordnet16_dir)
 WN16 = WordNetCorpusReader(os.path.abspath("{0}/{1}".format(cwd, wn16_path)), nltk.data.find(wn16_path))
 
@@ -149,10 +149,10 @@ if __name__ == '__main__':
     # activate sql with execute method
     # create table
     create_table = '''create table asynsets (SYNSET, CATEGORY)'''
-    c.execute(create_table)
+    # c.execute(create_table)
 
     #wn_affectを{word:categ}の辞書化し，それをpickleファイル化
-    asynsets_16 = load_asynsets("/Users/arai9814/WordNet/wn-domains-3.2/wn-affect-1.1/a-synsets.xml")
+    asynsets_16 = load_asynsets("../WordNet/wn-domains-3.2/wn-affect-1.1/a-synsets.xml")
     asynsets = merge_asynset_with_wn(asynsets_16)
     dic = asynsets_to_syn_dictionary(asynsets)
 

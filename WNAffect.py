@@ -25,6 +25,12 @@ class WNAffect:
 
         return list(all_categories)
 
+    def all_asynsets(self):
+        sql = 'select SYNSET from '+TABLENAMEs['as']
+
+        return list(set([row[0] for row in self.c.execute(sql)]))
+
+
     def hype_categs(self, categ, n=1):
         sql = 'select ISA from '+TABLENAMEs['hi']+' where NAME='+'"'+categ+'"'
         return list(set([row[0] for row in self.c.execute(sql)]))
@@ -43,4 +49,4 @@ class WNAffect:
 
 if __name__=='__main__':
     wna = WNAffect()
-    print(wna.hypo_categs('root'))
+    print(wna.all_asynsets())
