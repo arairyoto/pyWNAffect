@@ -27,7 +27,6 @@ class WNAffect:
 
     def all_asynsets(self):
         sql = 'select SYNSET from '+TABLENAMEs['as']
-
         return list(set([row[0] for row in self.c.execute(sql)]))
 
 
